@@ -1,0 +1,24 @@
+{
+  "name": "@acelogger/exporter-sentry",
+  "version": "1.0.0",
+  "description": "sentry exporter for acelogger",
+  "main": "lib/index.js",
+  "typings": "es/index.d.ts",
+  "module": "es/index.js",
+  "scripts": {
+    "prepublish": "npm run test",
+    "build": "rm -rf lib &>/dev/null && rm -rf es &>/dev/null && pnpm build:lib && pnpm build:es",
+    "build:lib": "tsc -p tsconfig.json",
+    "build:es": "tsc -p tsconfig.module.json",
+    "test": "pnpm build && pnpm test:lint && pnpm test:unit && pnpm test:unit-build",
+    "test:lint": "eslint --fix ./src && prettier \"src/**/*.ts\" --write",
+    "test:unit": "jest",
+    "test:unit-build": "jest -c jest.build.config.js"
+  },
+  "author": "wenshin2011@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "@acelogger/logger": "workspace:^0.14.0",
+    "whatwg-fetch": "^3.6.2"
+  }
+}

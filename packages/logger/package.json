@@ -1,0 +1,38 @@
+{
+  "name": "@acelogger/logger",
+  "version": "0.14.0",
+  "description": "a logger with tracing, metrics inspired by opentelemetry-js API",
+  "main": "lib/index.js",
+  "typings": "es/index.d.ts",
+  "module": "es/index.js",
+  "repository": "https://github.com/wenshin/aceloggerjs",
+  "license": "Apache 2.0",
+  "keywords": [
+    "tracing",
+    "typescript",
+    "javascript",
+    "nodejs",
+    "logger",
+    "opentelemetry"
+  ],
+  "files": [
+    "lib",
+    "es"
+  ],
+  "scripts": {
+    "prepublish": "npm run test",
+    "build": "rm -rf lib &>/dev/null && rm -rf es &>/dev/null && pnpm build:lib && pnpm build:es",
+    "build:lib": "tsc -p tsconfig.json",
+    "build:es": "tsc -p tsconfig.module.json",
+    "test": "pnpm build && pnpm test:lint && pnpm test:unit && pnpm test:unit-build",
+    "test:lint": "eslint --fix ./src && prettier \"src/**/*.ts\" --write",
+    "test:unit": "jest",
+    "test:unit-build": "jest -c jest.build.config.js"
+  },
+  "engines": {
+    "node": ">=8.9"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.0.4"
+  }
+}
