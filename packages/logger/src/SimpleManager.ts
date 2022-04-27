@@ -51,7 +51,7 @@ export default class SimpleManager implements Manager {
   private _attributes: InnerManagerAttributes = {
     app: 'unknown',
     appVersion: 'unknown',
-    lib: '@acelogger/logger',
+    lib: 'acelogger',
     libVersion: '0.14.0',
     os: 'unknown',
     osVersion: 'unknown',

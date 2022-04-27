@@ -6,7 +6,9 @@ export class SentryExporter implements LoggerEventExporter {
   constructor(private config: SentryConfig) {
     this.config = config;
   }
-  shutdown() {}
+  shutdown() {
+    return;
+  }
   export(evts: ExporterEvents) {
     sendSentryData(evts, this.config);
   }

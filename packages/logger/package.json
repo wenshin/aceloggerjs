@@ -1,5 +1,5 @@
 {
-  "name": "@acelogger/logger",
+  "name": "acelogger",
   "version": "0.14.0",
   "description": "a logger with tracing, metrics inspired by opentelemetry-js API",
   "main": "lib/index.js",

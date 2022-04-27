@@ -157,6 +157,10 @@ manager.setExporter(LogLevel.Debug, {
 
 # ChangeLog
 
+#### 2022-04-27 0.14.0
+
+- upgrade opentelemetry library with break change
+
 #### 2022-01-24 0.13.5
 
 - feat: remove duration infomation in endSpan message
