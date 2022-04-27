@@ -1,5 +1,10 @@
 import { ExporterEvents, LoggerEventExporter } from 'acelogger';
-import { flushSentry, sendSentryData, SentryConfig } from './sentry';
+import {
+  flushSentry,
+  sendSentryData,
+  SentryConfig,
+  sentryIdCreator,
+} from './sentry';
 import 'whatwg-fetch';
 
 export class SentryExporter implements LoggerEventExporter {
@@ -22,3 +27,5 @@ export {
   listenWebErrors,
   listenWebPerformance,
 } from './init-web';
+
+export { sentryIdCreator };
