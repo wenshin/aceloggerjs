@@ -1,5 +1,5 @@
 {
-  "name": "acelogger-exporter-sentry",
+  "name": "acelogger-exporter-sentry21",
   "version": "0.14.1",
   "description": "sentry exporter for acelogger",
   "main": "lib/index.js",
