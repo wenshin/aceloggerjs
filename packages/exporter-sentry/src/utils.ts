@@ -3,7 +3,7 @@ import {
   ExporterEvents,
   LoggerAttributes,
   ManagerAttributes,
-} from '@acelogger/logger';
+} from 'acelogger';
 
 export type EventFormatter<T> = (
   evt: LoggerEvent,
