@@ -27,7 +27,7 @@ export type InnerManagerAttributes = ManagerAttributes & {
   libVersion: string;
 };
 
-export interface CacheEvents {
+export interface LoggerEvents {
   attributes: LoggerAttributes;
   events: LoggerEvent[];
 }
@@ -39,7 +39,7 @@ export interface Manager {
   readonly idCreator: IDCreator;
   readonly flushing: boolean;
   readonly attributes: InnerManagerAttributes;
-  eventBuffer: Map<LogLevel, Map<string, CacheEvents>>;
+  eventBuffer: Map<LogLevel, Map<string, LoggerEvents>>;
 
   setAttributes(attrs: ManagerAttributes): void;
 

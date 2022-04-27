@@ -3,6 +3,8 @@ build
 test
 src/**.js
 .idea/*
+.DS_Store
+./**/.DS_Store
 es
 dist
 lib

@@ -1,5 +1,18 @@
-import { getLogLevelByStatus, getStatusFromHTTPStatus, stackToFrame } from '.';
-import { LogLevel, SpanStatusCode, ErrorStackFrame } from './api';
+import {
+  getLogLevelByStatus,
+  getStatusFromHTTPStatus,
+  stackToFrame,
+  mapExporterEvents,
+} from '.';
+import {
+  LogLevel,
+  SpanStatusCode,
+  ErrorStackFrame,
+  LoggerEvent,
+  SpanKind,
+  EventType,
+  TraceFlags,
+} from './api';
 
 test('utils::getLogLevelByStatus', () => {
   expect(getLogLevelByStatus(SpanStatusCode.OK)).toBe(LogLevel.Debug);
@@ -81,4 +94,90 @@ test('utils::stackToFrame normal', () => {
   at HTMLDocument.<anonymous> (gpt.js:10:1)
   at HTMLDocument.<anonymous> (gpt.js:10:1)`);
   expect(JSON.stringify(expectFrames)).toBe(JSON.stringify(frames));
+});
+
+test('utils::mapExporterEvents normal', () => {
+  const evts = mapExporterEvents<LoggerEvent>(
+    {
+      attributes: {
+        app: 'test',
+        appVersion: '0.1.1',
+        env: 'test',
+        os: 'macOS',
+        osVersion: '1.0',
+        userId: '1',
+      },
+      events: [
+        {
+          attributes: {
+            spanName: 'span1',
+            spanKind: SpanKind.CLIENT,
+          },
+          events: [
+            {
+              name: '123',
+              type: EventType.Event,
+              level: LogLevel.Debug,
+              traceFlags: TraceFlags.NONE,
+              traceId: '123123',
+              spanId: '123123-0.1',
+              parentSpanId: '123123-0',
+              attributes: {},
+              data: {},
+              status: SpanStatusCode.OK,
+              message: 'error',
+              time: 123,
+            },
+          ],
+        },
+        {
+          attributes: {
+            spanName: 'span2',
+            spanKind: SpanKind.CLIENT,
+          },
+          events: [
+            {
+              name: '234',
+              type: EventType.Event,
+              level: LogLevel.Debug,
+              traceFlags: TraceFlags.NONE,
+              traceId: '234234',
+              spanId: '234234-0.1',
+              parentSpanId: '234234-0',
+              attributes: {},
+              data: {},
+              status: SpanStatusCode.OK,
+              message: 'error',
+              time: 234,
+            },
+          ],
+        },
+      ],
+    },
+    (evt, loggerAttrs, globalAttrs) => {
+      evt.attributes = { ...loggerAttrs, ...globalAttrs, ...evt.attributes };
+      return evt;
+    }
+  );
+  expect(evts.length).toBe(2);
+  expect(evts[0].attributes).toEqual({
+    spanName: 'span1',
+    spanKind: SpanKind.CLIENT,
+    app: 'test',
+    appVersion: '0.1.1',
+    env: 'test',
+    os: 'macOS',
+    osVersion: '1.0',
+    userId: '1',
+  });
+  expect(evts[1].attributes).toEqual({
+    spanName: 'span2',
+    spanKind: SpanKind.CLIENT,
+    app: 'test',
+    appVersion: '0.1.1',
+    env: 'test',
+    os: 'macOS',
+    osVersion: '1.0',
+    userId: '1',
+  });
 });

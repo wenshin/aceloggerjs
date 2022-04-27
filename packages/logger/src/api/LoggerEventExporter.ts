@@ -1,9 +1,9 @@
 import { ExportResult } from './ExportResult';
-import { ManagerAttributes, CacheEvents } from './Manager';
+import { ManagerAttributes, LoggerEvents } from './Manager';
 
 export interface ExporterEvents {
   attributes: ManagerAttributes;
-  events: CacheEvents[];
+  events: LoggerEvents[];
 }
 
 export interface LoggerEventExporter {

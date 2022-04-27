@@ -1,4 +1,13 @@
-import { TimeInput, SpanStatusCode, LogLevel, ErrorStackFrame } from './api';
+import {
+  TimeInput,
+  SpanStatusCode,
+  LogLevel,
+  ErrorStackFrame,
+  LoggerEvent,
+  LoggerAttributes,
+  ManagerAttributes,
+  ExporterEvents,
+} from './api';
 
 export function isTimeInputHrTime(time: TimeInput): boolean {
   return Array.isArray(time) && time.length === 2;
@@ -74,4 +83,25 @@ export function stackToFrame(stack: string): ErrorStackFrame[] {
         in_app: true,
       };
     });
+}
+
+export type EventFormatter<T> = (
+  evt: LoggerEvent,
+  loggerAttrs: LoggerAttributes,
+  globalAttrs: ManagerAttributes
+) => T;
+
+export function mapExporterEvents<T>(
+  evts: ExporterEvents,
+  format: EventFormatter<T>
+): T[] {
+  const data: T[] = [];
+  const globalAttrs = evts.attributes;
+  evts.events.forEach((loggerEvts) => {
+    const loggerAttrs = loggerEvts.attributes;
+    loggerEvts.events.forEach((evt) => {
+      data.push(format(evt, loggerAttrs, globalAttrs));
+    });
+  });
+  return data;
 }
