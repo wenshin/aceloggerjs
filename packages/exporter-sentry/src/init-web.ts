@@ -1,4 +1,4 @@
-import { Logger, SpanLogger } from '@acelogger/logger';
+import { Logger, SpanLogger } from 'acelogger';
 
 let initedErrors = false;
 let initedPerformance = false;

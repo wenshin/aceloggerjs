@@ -9,7 +9,7 @@ import {
   LoggerEvent,
   LogLevel,
   ManagerAttributes,
-} from '@acelogger/logger';
+} from 'acelogger';
 import { EventFormatter, mapExporterEvents } from './utils';
 
 /**

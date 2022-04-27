@@ -21,7 +21,7 @@
   ],
   "scripts": {
     "prepublish": "npm run test",
-    "build": "rm -rf lib &>/dev/null && rm -rf es &>/dev/null && pnpm build:lib && pnpm build:es",
+    "build": "rm -rf lib/* &>/dev/null && rm -rf es/* &>/dev/null && pnpm build:lib && pnpm build:es",
     "build:lib": "tsc -p tsconfig.json",
     "build:es": "tsc -p tsconfig.module.json",
     "test": "pnpm build && pnpm test:lint && pnpm test:unit && pnpm test:unit-build",

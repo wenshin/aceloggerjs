@@ -1,4 +1,4 @@
-import { ExporterEvents, LoggerEventExporter } from '@acelogger/logger';
+import { ExporterEvents, LoggerEventExporter } from 'acelogger';
 import { flushSentry, sendSentryData, SentryConfig } from './sentry';
 import 'whatwg-fetch';
 
