@@ -86,7 +86,7 @@ test('SimpleLogger::startSpan without remote context', (done) => {
       osVersion: '1.0',
     });
     expect(loggerEvts.attributes).toEqual({
-      logger: 'unknown',
+      logger: 'default',
       spanKind: SpanKind.INTERNAL,
       spanName: span.name,
     });
@@ -508,9 +508,9 @@ test('SimpleLogger::setAttributes update logger name and version', (done) => {
     try {
       const { evt, loggerEvts } = getEvents(mockExport.mock.calls[0]);
       expect(loggerEvts.attributes).toEqual({
-        logger: 'unknown',
+        logger: 'default',
         spanKind: 0,
-        spanName: 'unknown',
+        spanName: 'default',
       });
       expect(evt.attributes).toEqual(undefined);
       done();
@@ -524,8 +524,8 @@ test('SimpleLogger::getAttributes', () => {
   const { ace } = createMockLib();
   const attrs = ace.logger.getAttributes();
   expect(attrs).toEqual({
-    logger: 'unknown',
+    logger: 'default',
     spanKind: 0,
-    spanName: 'unknown',
+    spanName: 'default',
   });
 });

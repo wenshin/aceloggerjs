@@ -1,5 +1,13 @@
 # acelogger-exporter-sentry
 
+## 0.14.3
+
+### Patch Changes
+
+- fix console exporter bug
+- Updated dependencies
+  - acelogger@0.14.3
+
 ## 0.14.2
 
 ### Patch Changes

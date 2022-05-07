@@ -1,5 +1,11 @@
 # acelogger
 
+## 0.14.3
+
+### Patch Changes
+
+- fix console exporter bug
+
 ## 0.14.2
 
 ### Patch Changes
