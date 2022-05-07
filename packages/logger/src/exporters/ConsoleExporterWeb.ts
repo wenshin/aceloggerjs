@@ -6,6 +6,7 @@ import {
   ExporterEvents,
   LoggerAttributes,
 } from '../api';
+import { mapExporterEvents } from '../utils';
 import { adaptToJSConsole, formatSection, LogLevelTitleMap } from './console';
 
 export function adaptToBrowserConsole(
@@ -43,8 +44,8 @@ export default class ConsoleExporterWeb implements LoggerEventExporter {
     if (this.stoped) {
       return;
     }
-    evts.events.forEach(({ attributes, events }) => {
-      events.forEach((evt) => adaptToBrowserConsole(attributes, evt));
+    mapExporterEvents(evts, (evt, loggerAttrs, globalAttrs) => {
+      adaptToBrowserConsole({ ...globalAttrs, ...loggerAttrs }, evt);
     });
     if (cb) {
       cb(ExportResult.SUCCESS);

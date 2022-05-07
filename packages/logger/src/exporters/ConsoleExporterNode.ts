@@ -6,6 +6,7 @@ import {
   ExporterEvents,
   LoggerAttributes,
 } from '../api';
+import { mapExporterEvents } from '../utils';
 import { adaptToJSConsole, formatSection, LogLevelTitleMap } from './console';
 
 export function adaptToNodeConsole(
@@ -41,8 +42,8 @@ export default class ConsoleExporterNode implements LoggerEventExporter {
     if (this.stoped) {
       return;
     }
-    evts.events.forEach(({ attributes, events }) => {
-      events.forEach((evt) => adaptToNodeConsole(attributes, evt));
+    mapExporterEvents(evts, (evt, loggerAttrs, globalAttrs) => {
+      adaptToNodeConsole({ ...globalAttrs, ...loggerAttrs }, evt);
     });
     if (cb) {
       cb(ExportResult.SUCCESS);

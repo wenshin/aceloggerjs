@@ -44,9 +44,9 @@ export default class SimpleLogger implements Logger {
   public manager: Manager;
   public span?: SpanStruct;
   private attributes: LoggerAttributes = {
-    logger: 'unknown',
+    logger: 'default',
     spanKind: SpanKind.INTERNAL,
-    spanName: 'unknown',
+    spanName: 'default',
   };
 
   public setAttributes(attrs: Partial<LoggerAttributes>): void {
@@ -258,7 +258,7 @@ export default class SimpleLogger implements Logger {
       data: evt.data,
       level,
       message: evt.message,
-      metrics: evt.metrics,
+      metrics: formatMetrics(this.attributes.spanName, evt.metrics),
       name: evt.name,
       samplingRate,
       stack: evt.stack ? stackToFrame(evt.stack) : undefined,
@@ -268,4 +268,15 @@ export default class SimpleLogger implements Logger {
       type: evt.type,
     });
   }
+}
+
+function formatMetrics(spanName: string, metrics: LoggerEvent['metrics']) {
+  if (metrics) {
+    const newMetrics = {} as LoggerEvent['metrics'];
+    Object.keys(metrics).map((k) => {
+      newMetrics[k.replace(/^\$/, spanName)] = metrics[k];
+    });
+    return newMetrics;
+  }
+  return metrics;
 }

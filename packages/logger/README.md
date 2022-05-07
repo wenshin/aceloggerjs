@@ -157,6 +157,14 @@ manager.setExporter(LogLevel.Debug, {
 
 # ChangeLog
 
+#### 2022-05-07 0.14.3
+
+- fix: console exporter bug
+
+#### 2022-04-27 0.14.2
+
+- chore enhancement
+
 #### 2022-04-27 0.14.0
 
 - upgrade opentelemetry library with break change
