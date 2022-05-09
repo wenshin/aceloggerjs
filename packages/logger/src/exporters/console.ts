@@ -1,5 +1,14 @@
 import { LoggerEvent, LogLevel, Attributes } from '../api';
 
+export interface InitParams {
+  /**
+   * the logger and span names split by comma to allow log.
+   * if has a `*` will log all events.
+   * example: `*`, `default,myspan`
+   */
+  include: string;
+}
+
 export function formatSection(evt: LoggerEvent): string {
   const attrs = evt.attributes || ({} as Attributes);
   const spanName = attrs.spanName ? '|' + attrs.spanName : '';

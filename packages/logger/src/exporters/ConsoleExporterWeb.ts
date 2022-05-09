@@ -7,19 +7,28 @@ import {
   LoggerAttributes,
 } from '../api';
 import { mapExporterEvents } from '../utils';
-import { adaptToJSConsole, formatSection, LogLevelTitleMap } from './console';
+import {
+  InitParams,
+  adaptToJSConsole,
+  formatSection,
+  LogLevelTitleMap,
+} from './console';
 
 export function adaptToBrowserConsole(
   attrs: LoggerAttributes,
-  evt: LoggerEvent
+  evt: LoggerEvent,
+  include: string
 ): void {
   const debugConfig = (
-    (window as unknown as { __ace_debug: string }).__ace_debug || ''
+    (window as unknown as { __ace_debug: string }).__ace_debug ||
+    include ||
+    ''
   ).split(',');
   const isAllowDebug =
     debugConfig.includes(attrs.logger || attrs.spanName) ||
     debugConfig.includes('*');
   if (isAllowDebug || evt.level >= LogLevel.Warn) {
+    evt.attributes = Object.assign(attrs, evt.attributes);
     adaptToJSConsole(evt, formatBrowserConsole);
   }
 }
@@ -40,12 +49,21 @@ export function formatBrowserConsole(evt: LoggerEvent): unknown[] {
 
 export default class ConsoleExporterWeb implements LoggerEventExporter {
   private stoped = false;
+  include = '';
+
+  constructor({ include }: InitParams) {
+    this.include = include;
+  }
   public export(evts: ExporterEvents, cb: (stats: ExportResult) => void): void {
     if (this.stoped) {
       return;
     }
     mapExporterEvents(evts, (evt, loggerAttrs, globalAttrs) => {
-      adaptToBrowserConsole({ ...globalAttrs, ...loggerAttrs }, evt);
+      adaptToBrowserConsole(
+        { ...globalAttrs, ...loggerAttrs },
+        evt,
+        this.include
+      );
     });
     if (cb) {
       cb(ExportResult.SUCCESS);
