@@ -235,7 +235,7 @@ function cacheTransactionData(evts: ExporterEvents, cb?: EventFormatter<void>) {
       if (evt.type === EventType.Event || evt.type === EventType.Tracing) {
         payload.spans.push(getSentrySpan(payload, evt));
         payload.contexts.trace.status =
-          evt.status === SpanStatusCode.OK ? 'ok' : 'unknown_error';
+          evt.status === SpanStatusCode.OK ? 'ok' : 'internal_error';
       }
     }
     breadcrumbs.push(
