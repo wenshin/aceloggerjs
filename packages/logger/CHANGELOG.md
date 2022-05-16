@@ -1,5 +1,11 @@
 # acelogger
 
+## 0.14.5
+
+### Patch Changes
+
+- fix sentry exporter status
+
 ## 0.14.4
 
 ### Patch Changes

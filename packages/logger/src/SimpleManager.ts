@@ -52,7 +52,7 @@ export default class SimpleManager implements Manager {
     app: 'unknown',
     appVersion: 'unknown',
     lib: 'acelogger',
-    libVersion: '0.14.4',
+    libVersion: '0.14.5',
     os: 'unknown',
     osVersion: 'unknown',
     env: 'production',

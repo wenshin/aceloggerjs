@@ -1,5 +1,13 @@
 # acelogger-exporter-sentry
 
+## 0.14.5
+
+### Patch Changes
+
+- fix sentry exporter status
+- Updated dependencies
+  - acelogger@0.14.5
+
 ## 0.14.4
 
 ### Patch Changes
