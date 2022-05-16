@@ -1,5 +1,13 @@
 # acelogger-exporter-sentry
 
+## 0.14.4
+
+### Patch Changes
+
+- 9709eee: change sentry error status value
+- Updated dependencies [9709eee]
+  - acelogger@0.14.4
+
 ## 0.14.3
 
 ### Patch Changes

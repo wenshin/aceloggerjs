@@ -1,6 +1,6 @@
 {
   "name": "acelogger-exporter-sentry",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "description": "sentry exporter for acelogger",
   "main": "lib/index.js",
   "typings": "es/index.d.ts",
@@ -25,9 +25,9 @@
     "whatwg-fetch": "^3.6.2"
   },
   "peerDependencies": {
-    "acelogger": "workspace:^0.14.3"
+    "acelogger": "workspace:^0.14.4"
   },
   "devDependencies": {
-    "acelogger": "workspace:^0.14.3"
+    "acelogger": "workspace:^0.14.4"
   }
 }

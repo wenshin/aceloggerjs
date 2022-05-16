@@ -1,5 +1,11 @@
 # acelogger
 
+## 0.14.4
+
+### Patch Changes
+
+- 9709eee: change sentry error status value
+
 ## 0.14.3
 
 ### Patch Changes
