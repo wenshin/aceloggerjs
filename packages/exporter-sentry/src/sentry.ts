@@ -205,6 +205,7 @@ function cacheTransactionData(evts: ExporterEvents, cb?: EventFormatter<void>) {
               span_id: evt.spanId,
               trace_id: evt.traceId,
               tags: getSentryTags(loggerAttrs),
+              status: 'unavailable',
             },
           },
           start_timestamp: getSecondsTime(evt.time),
@@ -231,11 +232,11 @@ function cacheTransactionData(evts: ExporterEvents, cb?: EventFormatter<void>) {
       }
       if (evt.name === getSpanEventName(loggerAttrs.spanName, 'end')) {
         payload.timestamp = getSecondsTime(evt.time);
+        payload.contexts.trace.status =
+          evt.status === SpanStatusCode.OK ? 'ok' : 'internal_error';
       }
       if (evt.type === EventType.Event || evt.type === EventType.Tracing) {
         payload.spans.push(getSentrySpan(payload, evt));
-        payload.contexts.trace.status =
-          evt.status === SpanStatusCode.OK ? 'ok' : 'internal_error';
       }
     }
     breadcrumbs.push(
@@ -440,6 +441,13 @@ function getSentrySpanFromPaylaod(
 export function flushSentry(conf: SentryConfig) {
   spanMap.forEach((payload, key) => {
     if (!sendMap.get(key)) {
+      // 未结束的 span
+      if (!payload.timestamp) {
+        payload.timestamp = Date.now();
+        // 超时状态
+        payload.contexts.trace.status = 'deadline_exceeded';
+      }
+      mergeChildSpans(payload);
       sendTransaction(payload, conf);
       spanMap.delete(key);
       sendMap.set(key, true);
