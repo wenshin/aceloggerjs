@@ -59,7 +59,12 @@ export interface Manager {
   setExporter(level: LogLevel, exporter: LoggerEventExporter): this;
   addEvent(spanId: string, attrs: LoggerAttributes, event: LoggerEvent): void;
   /**
-   * export all cached events
+   * export all cached events asynchronously
    */
   flush(cb?: () => void): void;
+  /**
+   * export all cached events immediately,
+   * use it prudently, may cause performance problems
+   */
+  flushSync(): void;
 }

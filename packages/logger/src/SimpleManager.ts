@@ -172,7 +172,7 @@ export default class SimpleManager implements Manager {
   }
 
   public flush(cb?: () => void): void {
-    if (cb) {
+    if (cb && this.flushCallbacks.indexOf(cb) === -1) {
       this.flushCallbacks.push(cb);
     }
     // do not use debounce to reduce the cpu consume
@@ -181,15 +181,19 @@ export default class SimpleManager implements Manager {
     }
 
     this.flushTimer = setTimeout(() => {
-      // 1. if exporters exist, export all events
-      this.eventBuffer.forEach((evtsBySpan, level) => {
-        this.export(level, evtsBySpan);
-      });
-      // 2. reset eventBuffer anyway
-      this.eventBuffer = new Map();
-      this.flushTimer = null;
-      this.flushCallbacks.forEach((f) => f());
+      this.flushSync();
     }, this.flushDelay);
+  }
+
+  public flushSync() {
+    // 1. if exporters exist, export all events
+    this.eventBuffer.forEach((evtsBySpan, level) => {
+      this.export(level, evtsBySpan);
+    });
+    // 2. reset eventBuffer anyway
+    this.eventBuffer = new Map();
+    this.flushTimer = null;
+    this.flushCallbacks.forEach((f) => f());
   }
 
   get flushing(): boolean {
