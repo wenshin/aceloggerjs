@@ -1,5 +1,11 @@
 # acelogger
 
+## 0.15.0
+
+### Minor Changes
+
+- add Manager.flushSync for flush data immediately
+
 ## 0.14.5
 
 ### Patch Changes

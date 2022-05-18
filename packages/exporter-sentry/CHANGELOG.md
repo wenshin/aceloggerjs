@@ -1,5 +1,16 @@
 # acelogger-exporter-sentry
 
+## 0.15.0
+
+### Minor Changes
+
+- add Manager.flushSync for flush data immediately
+
+### Patch Changes
+
+- Updated dependencies
+  - acelogger@0.15.0
+
 ## 0.14.5
 
 ### Patch Changes
