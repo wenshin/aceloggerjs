@@ -1,5 +1,13 @@
 # acelogger-exporter-sentry
 
+## 0.15.1
+
+### Patch Changes
+
+- add acelogger-exporter-sentry-core package and no api change
+- Updated dependencies
+  - acelogger@0.15.1
+
 ## 0.14.3
 
 ### Patch Changes
