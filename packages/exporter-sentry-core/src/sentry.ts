@@ -9,8 +9,8 @@ import {
   LoggerEvent,
   LogLevel,
   ManagerAttributes,
+  mapExporterEvents,
 } from 'acelogger';
-import { EventFormatter, mapExporterEvents } from './utils';
 
 /**
  * 踩坑
@@ -23,11 +23,27 @@ const spanMap = new Map<string, TransactionPayload>();
 const sendMap = new Map<string, boolean>();
 const breadcrumbs: TransactionPayload['breadcrumbs'] = [];
 
+export type EventFormatter<T> = (
+  evt: LoggerEvent,
+  loggerAttrs: LoggerAttributes,
+  globalAttrs: ManagerAttributes
+) => T;
+
+export interface FetchOptions {
+  url: string;
+  method: 'POST';
+  headers: Record<string, string>;
+  data: Record<string, unknown> | string;
+}
+
 export interface SentryConfig {
   key: string;
   projectId: string;
   // domain and protocol, https://www.sentry.com
   host: string;
+  pageURI: string;
+  userAgent: string;
+  fetch(options: FetchOptions): Promise<unknown>;
 }
 
 function getSentryUrl(conf: SentryConfig, type: 'error' | 'transition') {
@@ -37,19 +53,22 @@ function getSentryUrl(conf: SentryConfig, type: 'error' | 'transition') {
 
 export function sendSentryData(evts: ExporterEvents, conf: SentryConfig) {
   if (!evts.events.length) return;
-  cacheTransactionData(evts, (evt, loggerAttrs, globalAttrs) => {
+  cacheTransactionData(evts, conf, (evt, loggerAttrs, globalAttrs) => {
     // 上报错误
     if (evt.level >= LogLevel.Warn) {
-      const data = getSentryExceptionData(evt, loggerAttrs, globalAttrs);
-      fetch(getSentryUrl(conf, 'error'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      }).catch((err) => {
-        console.error(err);
-      });
+      const data = getSentryExceptionData(evt, loggerAttrs, globalAttrs, conf);
+      conf
+        .fetch({
+          url: getSentryUrl(conf, 'error'),
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          data,
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     }
   });
   spanMap.forEach((payload, key) => {
@@ -82,24 +101,27 @@ function mergeChildSpans(
 }
 
 function sendTransaction(payload: TransactionPayload, conf: SentryConfig) {
-  fetch(getSentryUrl(conf, 'transition'), {
-    method: 'POST',
-    headers: {
-      'content-type': 'text/plain; charset=utf-8',
-    },
-    body: `{"event_id":"${
-      payload.event_id
-    }","sent_at":"${new Date().toISOString()}","sdk":{"name":"${
-      payload.sdk.name
-    }","version":"${payload.sdk.version}"}}
+  conf
+    .fetch({
+      url: getSentryUrl(conf, 'transition'),
+      method: 'POST',
+      headers: {
+        'content-type': 'text/plain; charset=utf-8',
+      },
+      data: `{"event_id":"${
+        payload.event_id
+      }","sent_at":"${new Date().toISOString()}","sdk":{"name":"${
+        payload.sdk.name
+      }","version":"${payload.sdk.version}"}}
 {"type":"transaction","sample_rates":[{"id":"client_rate","rate":1}]}
 ${JSON.stringify(payload)}`,
-  }).catch((err) => {
-    console.error(err);
-  });
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 }
 
-interface TransacctionSpan {
+interface TransactionSpan {
   description: string;
   op: string;
   parent_span_id: string;
@@ -171,7 +193,7 @@ interface TransactionPayload {
    */
   timestamp: number;
   measurements: { [key: string]: { value: number | string } };
-  spans: TransacctionSpan[];
+  spans: TransactionSpan[];
   tags: Tags;
   breadcrumbs: Breadcrumb[];
 
@@ -185,7 +207,11 @@ interface TransactionPayload {
  * acelogger 的一个 span 对应一个 TransacctionPayload，什么时机上报缓存的 span 数据是个问题
  * @param evts
  */
-function cacheTransactionData(evts: ExporterEvents, cb?: EventFormatter<void>) {
+function cacheTransactionData(
+  evts: ExporterEvents,
+  conf: SentryConfig,
+  cb?: EventFormatter<void>
+) {
   mapExporterEvents(evts, (evt, loggerAttrs, globalAttrs) => {
     const isRootSpan = evt.spanId === sentryIdCreator.defaultSpanId;
     if (!isRootSpan) {
@@ -197,7 +223,7 @@ function cacheTransactionData(evts: ExporterEvents, cb?: EventFormatter<void>) {
           event_id: createSentryEventId(),
           environment: globalAttrs.env,
           sdk: getSentrySDK(),
-          request: getSentryRequest(),
+          request: getSentryRequest(conf),
           transaction: (loggerAttrs.url as string) || loggerAttrs.spanName,
           contexts: {
             trace: {
@@ -260,7 +286,8 @@ function getParentSpan(evt: LoggerEvent) {
 function getSentryExceptionData(
   evt: LoggerEvent,
   loggerAttrs: LoggerAttributes,
-  globalAttrs: ManagerAttributes
+  globalAttrs: ManagerAttributes,
+  conf: SentryConfig
 ) {
   const userId = globalAttrs.userId || '';
 
@@ -311,7 +338,7 @@ function getSentryExceptionData(
       id: userId,
     },
     breadcrumbs,
-    request: getSentryRequest(),
+    request: getSentryRequest(conf),
     contexts: {
       data: evt.data,
     },
@@ -351,11 +378,11 @@ function getSentrySDK() {
   };
 }
 
-function getSentryRequest() {
+function getSentryRequest(conf: SentryConfig) {
   return {
-    url: window.location.href,
+    url: conf.pageURI,
     headers: {
-      'User-Agent': window.navigator.userAgent,
+      'User-Agent': conf.userAgent,
     },
   };
 }

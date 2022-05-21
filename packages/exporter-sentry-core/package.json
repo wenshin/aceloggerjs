@@ -1,5 +1,5 @@
 {
-  "name": "acelogger-exporter-sentry",
+  "name": "acelogger-exporter-sentry-core",
   "version": "0.15.0",
   "description": "sentry exporter for acelogger",
   "main": "lib/index.js",
@@ -21,10 +21,6 @@
   ],
   "author": "wenshin2011@gmail.com",
   "license": "Apache 2.0",
-  "dependencies": {
-    "acelogger-exporter-sentry-core": "workspace:^0.15.0",
-    "whatwg-fetch": "^3.6.2"
-  },
   "peerDependencies": {
     "acelogger": "workspace:^0.15.0"
   },

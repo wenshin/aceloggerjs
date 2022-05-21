@@ -48,7 +48,18 @@ importers:
 
   packages/exporter-sentry:
     specifiers:
-      acelogger: workspace:^0.14.0
+      acelogger: workspace:^0.15.0
+      acelogger-exporter-sentry-core: workspace:^0.15.0
+      whatwg-fetch: ^3.6.2
+    dependencies:
+      acelogger-exporter-sentry-core: link:../exporter-sentry-core
+      whatwg-fetch: registry.npmmirror.com/whatwg-fetch/3.6.2
+    devDependencies:
+      acelogger: link:../logger
+
+  packages/exporter-sentry-core:
+    specifiers:
+      acelogger: workspace:^0.15.0
       whatwg-fetch: ^3.6.2
     dependencies:
       whatwg-fetch: registry.npmmirror.com/whatwg-fetch/3.6.2
