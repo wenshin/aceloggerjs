@@ -45,5 +45,8 @@
         "rules": {}
       }
     ]
+  },
+  "dependencies": {
+    "jest-util": "^28.1.0"
   }
 }
