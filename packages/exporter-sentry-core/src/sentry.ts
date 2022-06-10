@@ -230,7 +230,7 @@ function cacheTransactionData(
               op: loggerAttrs.spanName,
               span_id: evt.spanId,
               trace_id: evt.traceId,
-              tags: getSentryTags(loggerAttrs),
+              tags: getSentryTags({}),
               status: 'unavailable',
             },
           },
@@ -239,7 +239,11 @@ function cacheTransactionData(
           measurements: {},
           spans: [],
           breadcrumbs,
-          tags: getSentryTags(globalAttrs),
+          tags: getSentryTags({
+            ...globalAttrs,
+            ...loggerAttrs,
+            ...evt.attributes,
+          }),
         };
         spanMap.set(evt.spanId, payload);
       }
