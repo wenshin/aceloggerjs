@@ -76,7 +76,7 @@ export function collectPerformance(logger: SpanLogger) {
           time:
             timeOrigin + (entry as PerformanceNavigationTiming).responseStart,
           data: {
-            startTime:
+            userStartTime:
               timeOrigin + (entry as PerformanceNavigationTiming).requestStart,
           },
         });
@@ -84,7 +84,7 @@ export function collectPerformance(logger: SpanLogger) {
           time:
             timeOrigin + (entry as PerformanceNavigationTiming).domainLookupEnd,
           data: {
-            startTime:
+            userStartTime:
               timeOrigin +
               (entry as PerformanceNavigationTiming).domainLookupStart,
           },
@@ -94,7 +94,7 @@ export function collectPerformance(logger: SpanLogger) {
             timeOrigin +
             (entry as PerformanceNavigationTiming).secureConnectionStart,
           data: {
-            startTime:
+            userStartTime:
               timeOrigin +
               (entry as PerformanceNavigationTiming).domainLookupEnd,
           },
@@ -104,7 +104,7 @@ export function collectPerformance(logger: SpanLogger) {
             timeOrigin +
             (entry as PerformanceNavigationTiming).domContentLoadedEventEnd,
           data: {
-            startTime:
+            userStartTime:
               timeOrigin +
               (entry as PerformanceNavigationTiming).domContentLoadedEventStart,
           },
@@ -113,7 +113,7 @@ export function collectPerformance(logger: SpanLogger) {
           time:
             timeOrigin + (entry as PerformanceNavigationTiming).loadEventEnd,
           data: {
-            startTime:
+            userStartTime:
               timeOrigin +
               (entry as PerformanceNavigationTiming).loadEventStart,
           },

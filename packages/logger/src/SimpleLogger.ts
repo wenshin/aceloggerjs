@@ -207,10 +207,16 @@ export default class SimpleLogger implements Logger {
 
     e.level = e.level || LogLevel.Info;
 
+    e.data = Object.assign(
+      {
+        userStartTime: this.span.userStartTime,
+      },
+      e.data
+    );
+
     this.span.endTime = getMillisecondsTime(e.time) || this.manager.timer.now();
     const duration = this.span.endTime - this.span.startTime;
     e.metrics = Object.assign(
-      {},
       {
         [getDurationMetric(this.span.name)]: duration,
       },
