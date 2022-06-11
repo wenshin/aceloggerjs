@@ -1,5 +1,16 @@
 # acelogger-exporter-sentry
 
+## 0.16.0
+
+### Minor Changes
+
+- refactor sentry transaction transformer to solve data lost problem
+
+### Patch Changes
+
+- Updated dependencies
+  - acelogger@0.16.0
+
 ## 0.15.1
 
 ### Patch Changes
