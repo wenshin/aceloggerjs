@@ -52,4 +52,9 @@ export interface LoggerEvent {
   stack?: ErrorStackFrame[];
   // event trigger times
   time: TimeInput;
+  /**
+   * just a message for exporter to export or not.
+   * @default true
+   */
+  exportable: boolean;
 }

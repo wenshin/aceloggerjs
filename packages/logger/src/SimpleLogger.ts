@@ -16,6 +16,7 @@ import {
   StartSpanEventOptions,
   LoggerEvent,
 } from './api';
+import { ROOT_SPAN_NAME } from './consts';
 import {
   getDurationMetric,
   getLatencyMetric,
@@ -46,7 +47,7 @@ export default class SimpleLogger implements Logger {
   private attributes: LoggerAttributes = {
     logger: 'default',
     spanKind: SpanKind.INTERNAL,
-    spanName: 'default',
+    spanName: ROOT_SPAN_NAME,
   };
 
   public setAttributes(attrs: Partial<LoggerAttributes>): void {
@@ -178,19 +179,18 @@ export default class SimpleLogger implements Logger {
     );
     const logStart = !(opts && opts.logStart === false);
     const eventName = getSpanEventName(span.name, 'start');
-    if (logStart) {
-      const data: LoggerEvent['data'] = (opts && opts.data) || {};
-      data.userStartTime = span.userStartTime;
-      logger.innerLog({
-        data: data,
-        level: LogLevel.Info,
-        metrics: {
-          [getLatencyMetric(eventName)]: span.startTime - span.userStartTime,
-        },
-        name: eventName,
-        type: EventType.Tracing,
-      });
-    }
+    const data: LoggerEvent['data'] = (opts && opts.data) || {};
+    data.userStartTime = span.userStartTime;
+    logger.innerLog({
+      data: data,
+      level: LogLevel.Info,
+      metrics: {
+        [getLatencyMetric(eventName)]: span.startTime - span.userStartTime,
+      },
+      name: eventName,
+      type: EventType.Tracing,
+      exportable: logStart,
+    });
     return logger as SpanLogger;
   }
 
@@ -207,10 +207,16 @@ export default class SimpleLogger implements Logger {
 
     e.level = e.level || LogLevel.Info;
 
+    e.data = Object.assign(
+      {
+        userStartTime: this.span.userStartTime,
+      },
+      e.data
+    );
+
     this.span.endTime = getMillisecondsTime(e.time) || this.manager.timer.now();
     const duration = this.span.endTime - this.span.startTime;
     e.metrics = Object.assign(
-      {},
       {
         [getDurationMetric(this.span.name)]: duration,
       },
@@ -266,6 +272,7 @@ export default class SimpleLogger implements Logger {
       time,
       traceFlags,
       type: evt.type,
+      exportable: evt.exportable !== false,
     });
   }
 }

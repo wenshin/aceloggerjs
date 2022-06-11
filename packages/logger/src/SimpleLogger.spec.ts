@@ -10,6 +10,7 @@ import {
   ExportResult,
   Manager,
 } from './api';
+import { ROOT_SPAN_NAME } from './consts';
 import { performance } from 'perf_hooks';
 // 本来可以设置 resolveJsonModule 为 true 的，但是这样会导致最终构建的时候，输出目录会包含 src 目录
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -69,13 +70,22 @@ test('SimpleLogger::startSpan without remote context', (done) => {
   expect(span.context.traceId).toBeTruthy();
   expect(span.context.traceFlags).toBe(TraceFlags.NONE);
 
+  const logger2 = ace.logger.startSpan('test.span2', {
+    logStart: false,
+  });
+  expect(logger2.span.context.spanId).toBe(`${logger2.span.context.traceId}-2`);
+  expect(
+    logger2.span.context.traceId === logger.span.context.traceId
+  ).toBeTruthy();
+
   // event is in buffer
   expect(mockExport.mock.calls.length).toBe(0);
+
   logger.flush(() => {
     expect(mockExport.mock.calls.length).toBe(1);
 
     const { exEvts, loggerEvts, evt } = getEvents(mockExport.mock.calls[0]);
-    expect(exEvts.events.length).toBe(1);
+    expect(exEvts.events.length).toBe(2);
     expect(exEvts.attributes).toEqual({
       app: 'test-app',
       appVersion: '0.0.1',
@@ -100,15 +110,8 @@ test('SimpleLogger::startSpan without remote context', (done) => {
     expect(evt.traceFlags).toBe(TraceFlags.NONE);
     expect(evt.status).toBe(SpanStatusCode.OK);
     expect(evt.type).toBe(EventType.Tracing);
-    const logger2 = ace.logger.startSpan('test.span2', {
-      logStart: false,
-    });
-    expect(logger2.span.context.spanId).toBe(
-      `${logger2.span.context.traceId}-2`
-    );
-    expect(
-      logger2.span.context.traceId === logger.span.context.traceId
-    ).toBeTruthy();
+    expect(evt.exportable).toBe(true);
+
     done();
   });
 });
@@ -173,7 +176,9 @@ test('SimpleLogger::startSpan logStart is false', (done) => {
     logStart: false,
   });
   logger1.flush(() => {
-    expect(mockExport.mock.calls.length).toBe(0);
+    expect(mockExport.mock.calls.length).toBe(1);
+    const { evt } = getEvents(mockExport.mock.calls[0]);
+    expect(evt.exportable).toBe(false);
     done();
   });
 });
@@ -199,7 +204,7 @@ test('SimpleLogger::endSpan without event argument', (done) => {
   logger.flush(() => {
     try {
       expect(mockExport.mock.calls.length).toBe(1);
-      const { exEvts, evt, loggerEvts } = getEvents(mockExport.mock.calls[0]);
+      const { exEvts, loggerEvts } = getEvents(mockExport.mock.calls[0]);
       const span = logger.span;
       expect(exEvts.events.length).toBe(1);
       // timing end span
@@ -212,6 +217,7 @@ test('SimpleLogger::endSpan without event argument', (done) => {
         os: 'mac',
         osVersion: '1.0',
       });
+      expect(loggerEvts.events.length).toBe(2);
       expect(loggerEvts.attributes).toEqual({
         spanKind: SpanKind.INTERNAL,
         spanName: 'test.span',
@@ -220,15 +226,17 @@ test('SimpleLogger::endSpan without event argument', (done) => {
         tag1: 'tag1',
         tag2: 'tag2',
       });
-      expect(evt.name).toBe('test.span.end');
-      expect(evt.message).toBe('[test.span] end with no message');
-      expect(evt.level).toBe(LogLevel.Info);
+      const endEvt = loggerEvts.events[1];
+      expect(endEvt.name).toBe('test.span.end');
+      expect(endEvt.message).toBe('[test.span] end with no message');
+      expect(endEvt.level).toBe(LogLevel.Info);
       expect(span.startTime).toEqual(span.userStartTime);
-      expect(evt.metrics).toEqual({
+      expect(endEvt.metrics).toEqual({
         'test.span.duration': span.endTime - span.startTime,
       });
-      expect(evt.status).toBe(SpanStatusCode.OK);
-      expect(evt.type).toBe(EventType.Tracing);
+      expect(endEvt.status).toBe(SpanStatusCode.OK);
+      expect(endEvt.type).toBe(EventType.Tracing);
+      expect(endEvt.exportable).toBe(true);
       done();
     } catch (err) {
       done(err);
@@ -258,6 +266,7 @@ test('SimpleLogger::endSpan with event argument', (done) => {
       expect(evt.metrics).toEqual({
         'test.span.duration': endTime - logger.span.startTime,
       });
+      expect(evt.exportable).toBe(true);
       done();
     } catch (error) {
       done(error);
@@ -510,7 +519,7 @@ test('SimpleLogger::setAttributes update logger name and version', (done) => {
       expect(loggerEvts.attributes).toEqual({
         logger: 'default',
         spanKind: 0,
-        spanName: 'default',
+        spanName: ROOT_SPAN_NAME,
       });
       expect(evt.attributes).toEqual(undefined);
       done();
@@ -526,6 +535,6 @@ test('SimpleLogger::getAttributes', () => {
   expect(attrs).toEqual({
     logger: 'default',
     spanKind: 0,
-    spanName: 'default',
+    spanName: ROOT_SPAN_NAME,
   });
 });

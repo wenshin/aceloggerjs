@@ -20,30 +20,37 @@ export interface LoggerEventParams {
   level?: LogLevel;
   traceFlags?: TraceFlags;
   samplingRate?: number;
-  // tags for event, always used to filter the event
+  /**
+   * tags for event, always used to filter the event
+   */
   attributes?: Attributes;
-  // metric data
   metrics?: {
     [key: string]: string | number;
   };
-  //  any object data
   data?: {
     userStartTime?: TimeInput;
     [key: string]: unknown;
   };
-  // error status code
   status?: SpanStatusCode;
-  // error message for event
   message?: string;
-  // error stack, only exist when level is EventLevel.Error
+  /**
+   * error stack, only exist when level is EventLevel.Error
+   */
   stack?: string;
-  // event trigger times
+  /**
+   * event trigger time
+   */
   time?: TimeInput;
+  /**
+   * @default true
+   */
+  exportable?: boolean;
 }
 
 export interface StartSpanEventOptions extends SpanOptions {
   /**
    * 默认为 true，当设置为 false 时，不会记录 span start 事件
+   * @description after 0.16.0, a { exportable: false } property will send to exporter
    */
   logStart?: boolean;
   traceFlags?: TraceFlags;

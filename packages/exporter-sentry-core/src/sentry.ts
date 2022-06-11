@@ -10,6 +10,7 @@ import {
   LogLevel,
   ManagerAttributes,
   mapExporterEvents,
+  ROOT_SPAN_NAME,
 } from 'acelogger';
 
 /**
@@ -20,7 +21,6 @@ import {
  * 4. measurements 中 mark.metric 只支持 web vitals 指标
  */
 const spanMap = new Map<string, TransactionPayload>();
-const sendMap = new Map<string, boolean>();
 const breadcrumbs: TransactionPayload['breadcrumbs'] = [];
 
 export type EventFormatter<T> = (
@@ -54,6 +54,22 @@ function getSentryUrl(conf: SentryConfig, type: 'error' | 'transition') {
 export function sendSentryData(evts: ExporterEvents, conf: SentryConfig) {
   if (!evts.events.length) return;
   cacheTransactionData(evts, conf, (evt, loggerAttrs, globalAttrs) => {
+    if (
+      evt.name === getSpanEventName(loggerAttrs.spanName, 'start') &&
+      evt.exportable
+    ) {
+      const payload = spanMap.get(evt.spanId);
+      if (payload) {
+        sendTransaction(payload, conf);
+      }
+    }
+    if (evt.name === getSpanEventName(loggerAttrs.spanName, 'end')) {
+      const payload = spanMap.get(evt.spanId);
+      if (payload) {
+        sendTransaction(payload, conf);
+        spanMap.delete(evt.spanId);
+      }
+    }
     // 上报错误
     if (evt.level >= LogLevel.Warn) {
       const data = getSentryExceptionData(evt, loggerAttrs, globalAttrs, conf);
@@ -71,33 +87,6 @@ export function sendSentryData(evts: ExporterEvents, conf: SentryConfig) {
         });
     }
   });
-  spanMap.forEach((payload, key) => {
-    // payload.timestamp 大于 0 说明已经调用过 endSpan
-    if (payload.timestamp) {
-      if (!sendMap.get(key)) {
-        mergeChildSpans(payload);
-        sendTransaction(payload, conf);
-        spanMap.delete(key);
-        sendMap.set(key, true);
-      }
-    }
-  });
-}
-
-function mergeChildSpans(
-  payload: TransactionPayload,
-  childSpans?: TransactionPayload[]
-) {
-  const spans = childSpans || payload.childSpans || [];
-  spans.forEach((child) => {
-    payload.spans.push(
-      getSentrySpanFromPaylaod(payload.contexts.trace.span_id, child)
-    );
-    if (child.childSpans && child.childSpans.length) {
-      mergeChildSpans(payload, child.childSpans);
-    }
-  });
-  delete payload.childSpans;
 }
 
 function sendTransaction(payload: TransactionPayload, conf: SentryConfig) {
@@ -205,6 +194,23 @@ interface TransactionPayload {
 
 /**
  * acelogger 的一个 span 对应一个 TransacctionPayload，什么时机上报缓存的 span 数据是个问题
+ * 1. span.start event:
+ *    1.1 cache as parent child spans and breadcrumbs,
+ *    1.2 change to sentry span, startTime is event.userStartTime or event.time
+ *    1.3 sent to service immediately
+ * 2. span custom events:
+ *    2.1 cache as parent child spans
+ *    2.2 cache to breadcrumbs,
+ * 3. span logs:
+ *    3.1 cache to breadcrumbs
+ *    3.2 if level > warn, send to service as exception immediately
+ * 4. span metrics or storeMetrics:
+ *    4.1 cache to breadcrumbs
+ *    4.2 cache as span measurements
+ * 5. span.end event:
+ *    5.1 merge child spans
+ *    5.2 attach span measurements
+ *    5.3 change to sentry span and sent to service immediately
  * @param evts
  */
 function cacheTransactionData(
@@ -213,7 +219,7 @@ function cacheTransactionData(
   cb?: EventFormatter<void>
 ) {
   mapExporterEvents(evts, (evt, loggerAttrs, globalAttrs) => {
-    const isRootSpan = evt.spanId === sentryIdCreator.defaultSpanId;
+    const isRootSpan = loggerAttrs.spanName === ROOT_SPAN_NAME;
     if (!isRootSpan) {
       let payload = spanMap.get(evt.spanId);
       if (!payload) {
@@ -224,7 +230,7 @@ function cacheTransactionData(
           environment: globalAttrs.env,
           sdk: getSentrySDK(),
           request: getSentryRequest(conf),
-          transaction: (loggerAttrs.url as string) || loggerAttrs.spanName,
+          transaction: evt.name,
           contexts: {
             trace: {
               op: loggerAttrs.spanName,
@@ -234,8 +240,8 @@ function cacheTransactionData(
               status: 'unavailable',
             },
           },
-          start_timestamp: getSecondsTime(evt.time),
-          timestamp: 0,
+          start_timestamp: getSecondsTime(evt.data.userStartTime || evt.time),
+          timestamp: getSecondsTime(evt.time),
           measurements: {},
           spans: [],
           breadcrumbs,
@@ -248,25 +254,23 @@ function cacheTransactionData(
         spanMap.set(evt.spanId, payload);
       }
 
-      Object.assign(payload.measurements, getMeasurements(evt));
-      // 1. 如果是 span start 事件，则记录开始时间。并关联到父 Span 上面。
-      if (evt.name === getSpanEventName(loggerAttrs.spanName, 'start')) {
-        payload.start_timestamp = getSecondsTime(
-          evt.data.userStartTime || evt.time
-        );
-        const parentSpan = getParentSpan(evt);
-        if (parentSpan) {
-          parentSpan.childSpans = parentSpan.childSpans || [];
-          parentSpan.childSpans.push(payload);
+      updatePayloadMeasurements(payload, evt);
+
+      if (evt.type === EventType.Event || evt.type === EventType.Tracing) {
+        const sentrySpan = getSentrySpanFromEvent(payload, evt);
+        payload.spans.push(sentrySpan);
+        const parent = getParentSpanPayload(evt);
+        if (parent) {
+          parent.spans.push(sentrySpan);
         }
       }
+
       if (evt.name === getSpanEventName(loggerAttrs.spanName, 'end')) {
+        payload.event_id = createSentryEventId();
+        payload.transaction = (loggerAttrs.url as string) || evt.name;
         payload.timestamp = getSecondsTime(evt.time);
         payload.contexts.trace.status =
           evt.status === SpanStatusCode.OK ? 'ok' : 'internal_error';
-      }
-      if (evt.type === EventType.Event || evt.type === EventType.Tracing) {
-        payload.spans.push(getSentrySpan(payload, evt));
       }
     }
     breadcrumbs.push(
@@ -280,7 +284,7 @@ function cacheTransactionData(
   });
 }
 
-function getParentSpan(evt: LoggerEvent) {
+function getParentSpanPayload(evt: LoggerEvent) {
   if (evt.parentSpanId) {
     return spanMap.get(evt.parentSpanId);
   }
@@ -345,6 +349,13 @@ function getSentryExceptionData(
     request: getSentryRequest(conf),
     contexts: {
       data: evt.data,
+      trace: {
+        op: loggerAttrs.spanName,
+        span_id: evt.spanId,
+        trace_id: evt.traceId,
+        tags: getSentryTags({}),
+        status: 'unavailable',
+      },
     },
   };
 }
@@ -401,21 +412,23 @@ function getSentryTags(attrs: Attributes): Tags {
   };
 }
 
-function getMeasurements(evt: LoggerEvent) {
-  const measurements: TransactionPayload['measurements'] = {};
-  Object.keys(evt.metrics || {}).forEach((key) => {
-    if (evt.metrics) {
-      measurements[key] = { value: evt.metrics[key] };
+function updatePayloadMeasurements(
+  payload: TransactionPayload,
+  evt: LoggerEvent
+) {
+  if (evt.metrics) {
+    Object.keys(evt.metrics).forEach((key) => {
+      payload.measurements[key] = { value: evt.metrics[key] };
       if (['fp', 'fcp', 'lcp'].indexOf(key) > -1) {
-        measurements[`mark.${key}`] = {
+        // the value of mark.lcp is not duration, but a timestamp
+        payload.measurements[`mark.${key}`] = {
           value: getSecondsTime(
             (evt.data?.userStartTime as number) || evt.time
           ),
         };
       }
-    }
-  });
-  return measurements;
+    });
+  }
 }
 
 function getBreadcrumb(
@@ -436,7 +449,7 @@ function getBreadcrumb(
   };
 }
 
-function getSentrySpan(payload: TransactionPayload, evt: LoggerEvent) {
+function getSentrySpanFromEvent(payload: TransactionPayload, evt: LoggerEvent) {
   const endTime = getMillisecondsTime(evt.time);
   const startTime =
     evt.data && evt.data.userStartTime
@@ -453,37 +466,15 @@ function getSentrySpan(payload: TransactionPayload, evt: LoggerEvent) {
   };
 }
 
-function getSentrySpanFromPaylaod(
-  parentSpanId: string,
-  payload: TransactionPayload
-) {
-  return {
-    description: payload.transaction,
-    op: payload.contexts.trace.op,
-    parent_span_id: parentSpanId,
-    span_id: payload.contexts.trace.span_id,
-    start_timestamp: payload.start_timestamp,
-    // 当 span end 事件未触发时，payload.timestamp 为 0
-    timestamp: payload.timestamp || payload.start_timestamp,
-    trace_id: payload.contexts.trace.trace_id,
-  };
-}
-
 export function flushSentry(conf: SentryConfig) {
-  spanMap.forEach((payload, key) => {
-    if (!sendMap.get(key)) {
-      // 未结束的 span
-      if (!payload.timestamp) {
-        payload.timestamp = Date.now();
-        // 超时状态
-        payload.contexts.trace.status = 'deadline_exceeded';
-      }
-      mergeChildSpans(payload);
-      sendTransaction(payload, conf);
-      spanMap.delete(key);
-      sendMap.set(key, true);
-    }
+  spanMap.forEach((payload) => {
+    // 强制把未结束的 span 均上报
+    payload.timestamp = Date.now();
+    // 超时状态
+    payload.contexts.trace.status = 'deadline_exceeded';
+    sendTransaction(payload, conf);
   });
+  spanMap.clear();
 }
 
 export const sentryIdCreator = {
