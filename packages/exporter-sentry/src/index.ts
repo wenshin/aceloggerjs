@@ -5,7 +5,7 @@ import {
   FetchOptions,
   startPageloadLogger as startPageloadLoggerLib,
 } from 'acelogger-exporter-sentry-core';
-import 'whatwg-fetch';
+import { request } from './http';
 import { collectPerformance } from './performance';
 
 interface SentryConfig {
@@ -19,10 +19,11 @@ interface SentryConfig {
 
 export function createSentryExporter(conf: SentryConfig) {
   const defaultFetch = (options: FetchOptions) => {
-    return fetch(options.url, {
+    return request({
+      url: options.url,
       method: options.method,
       headers: options.headers,
-      body:
+      data:
         typeof options.data === 'string'
           ? options.data
           : JSON.stringify(options.data),
@@ -52,8 +53,12 @@ export function startPageloadLogger(
   return loadLogger;
 }
 
-export { collectPerformance, listenWebPerformance } from './performance';
+export {
+  collectPerformance,
+  listenWebPerformance,
+  collectPerformanceRepeat,
+} from './performance';
 
-export { listenWebErrors } from './errors';
+export { listenWebErrors, listenWebErrorsRepeat } from './errors';
 
 export { sentryIdCreator, SentryExporter };

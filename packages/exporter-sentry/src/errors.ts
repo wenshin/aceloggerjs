@@ -12,6 +12,10 @@ export function listenWebErrors(logger: Logger) {
     return;
   }
   initedErrors = true;
+  listenWebErrorsRepeat(logger);
+}
+
+export function listenWebErrorsRepeat(logger: Logger) {
   window.addEventListener('error', (evt) => {
     logger.error(`[${evt.type}]${evt.message}`, {
       data: {

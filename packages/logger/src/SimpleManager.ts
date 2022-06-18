@@ -130,6 +130,10 @@ export default class SimpleManager implements Manager {
     console.warn('DEPRECATED from 0.10.0');
   }
 
+  /**
+   * delay to flush events
+   * @param delay default is 200ms
+   */
   public setFlushDelay(delay: number): void {
     this.flushDelay = delay;
   }

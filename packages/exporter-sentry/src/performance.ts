@@ -26,11 +26,16 @@ export function collectPerformance(logger: SpanLogger) {
     // 避免重复记录
     return;
   }
-  const timeOrigin = logger.span.userStartTime;
   const data = window.performance.getEntries();
   if (data.length) {
     collectWebStatus.performance = true;
   }
+  collectPerformanceRepeat(logger);
+}
+
+export function collectPerformanceRepeat(logger: SpanLogger) {
+  const timeOrigin = logger.span.userStartTime;
+  const data = window.performance.getEntries();
   data.forEach((entry) => {
     let name = '';
     let message = '';
