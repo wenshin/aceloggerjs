@@ -1,6 +1,6 @@
 {
   "name": "acelogger-exporter-sentry",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "sentry exporter for acelogger",
   "main": "lib/index.js",
   "typings": "es/index.d.ts",
@@ -22,12 +22,12 @@
   "author": "wenshin2011@gmail.com",
   "license": "Apache 2.0",
   "dependencies": {
-    "acelogger-exporter-sentry-core": "workspace:^0.16.0"
+    "acelogger-exporter-sentry-core": "workspace:^0.16.1"
   },
   "peerDependencies": {
-    "acelogger": "workspace:^0.16.0"
+    "acelogger": "workspace:^0.16.1"
   },
   "devDependencies": {
-    "acelogger": "workspace:^0.16.0"
+    "acelogger": "workspace:^0.16.1"
   }
 }

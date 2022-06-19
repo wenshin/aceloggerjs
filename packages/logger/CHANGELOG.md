@@ -1,5 +1,11 @@
 # acelogger
 
+## 0.16.1
+
+### Patch Changes
+
+- reduce package size
+
 ## 0.16.0
 
 ### Minor Changes

@@ -61,6 +61,8 @@ function getCachedData(): RequestOptions[] {
   }
 }
 
-window.addEventListener('load', () => {
-  flushCachedData();
-});
+if (typeof window === 'object') {
+  window.addEventListener('load', () => {
+    flushCachedData();
+  });
+}

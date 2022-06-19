@@ -1,5 +1,13 @@
 # acelogger-exporter-sentry
 
+## 0.16.1
+
+### Patch Changes
+
+- reduce package size
+- Updated dependencies
+  - acelogger@0.16.1
+
 ## 0.16.0
 
 ### Minor Changes
