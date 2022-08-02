@@ -1,5 +1,14 @@
 # acelogger-exporter-sentry
 
+## 0.16.2
+
+### Patch Changes
+
+- exporter-sentry-core fix start event failure status
+- Updated dependencies
+  - acelogger-exporter-sentry-core@0.16.2
+  - acelogger@0.16.2
+
 ## 0.16.1
 
 ### Patch Changes

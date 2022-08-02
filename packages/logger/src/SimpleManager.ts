@@ -1,16 +1,17 @@
 import {
-  Manager,
-  Logger,
-  Tracer,
-  Timer,
   ExportResult,
+  InnerManagerAttributes,
   LogLevel,
+  Logger,
+  LoggerAttributes,
   LoggerEvent,
   LoggerEventExporter,
-  LoggerAttributes,
+  Manager,
   ManagerAttributes,
-  InnerManagerAttributes,
+  Timer,
+  Tracer,
 } from './api';
+
 import { IDCreator } from './api/IDCreator';
 import SimpleLogger from './SimpleLogger';
 import SimpleTracer from './SimpleTracer';
@@ -52,7 +53,7 @@ export default class SimpleManager implements Manager {
     app: 'unknown',
     appVersion: 'unknown',
     lib: 'acelogger',
-    libVersion: '0.16.1',
+    libVersion: '0.16.2',
     os: 'unknown',
     osVersion: 'unknown',
     env: 'production',
