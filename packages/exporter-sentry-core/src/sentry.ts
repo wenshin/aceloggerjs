@@ -1,16 +1,16 @@
 import {
   Attributes,
-  SpanStatusCode,
   EventType,
   ExporterEvents,
-  getMillisecondsTime,
-  getSpanEventName,
+  LogLevel,
   LoggerAttributes,
   LoggerEvent,
-  LogLevel,
   ManagerAttributes,
-  mapExporterEvents,
   ROOT_SPAN_NAME,
+  SpanStatusCode,
+  getMillisecondsTime,
+  getSpanEventName,
+  mapExporterEvents,
 } from 'acelogger';
 
 /**
@@ -60,7 +60,13 @@ export function sendSentryData(evts: ExporterEvents, conf: SentryConfig) {
     ) {
       const payload = spanMap.get(evt.spanId);
       if (payload) {
-        sendTransaction(payload, conf);
+        sendTransaction(
+          {
+            ...payload,
+            contexts: { trace: { ...payload.contexts.trace, status: 'ok' } },
+          },
+          conf
+        );
       }
     }
     if (evt.name === getSpanEventName(loggerAttrs.spanName, 'end')) {
@@ -456,7 +462,7 @@ function getSentrySpanFromEvent(payload: TransactionPayload, evt: LoggerEvent) {
       ? (evt.data.userStartTime as number)
       : endTime;
   return {
-    description: evt.message || evt.name,
+    description: evt.message || 'no message',
     op: evt.name,
     parent_span_id: evt.spanId,
     span_id: sentryIdCreator.createSpanId(),

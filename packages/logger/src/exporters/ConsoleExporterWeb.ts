@@ -1,18 +1,19 @@
 import {
-  LoggerEventExporter,
-  LoggerEvent,
   ExportResult,
-  LogLevel,
   ExporterEvents,
+  LogLevel,
   LoggerAttributes,
+  LoggerEvent,
+  LoggerEventExporter,
 } from '../api';
-import { mapExporterEvents } from '../utils';
 import {
   InitParams,
+  LogLevelTitleMap,
   adaptToJSConsole,
   formatSection,
-  LogLevelTitleMap,
 } from './console';
+
+import { mapExporterEvents } from '../utils';
 
 export function adaptToBrowserConsole(
   attrs: LoggerAttributes,
@@ -42,7 +43,7 @@ export function formatBrowserConsole(evt: LoggerEvent): unknown[] {
   return [
     `%c${LogLevelTitleMap[evt.level]} ${formatSection(evt)}`,
     `font-weight: bold; color: ${statusColor};`,
-    `"${evt.message}"`,
+    `"${evt.message || ''}"`,
     evt,
   ];
 }

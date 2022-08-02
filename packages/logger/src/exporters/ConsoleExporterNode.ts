@@ -1,18 +1,19 @@
 import {
-  LoggerEventExporter,
-  LoggerEvent,
   ExportResult,
-  LogLevel,
   ExporterEvents,
+  LogLevel,
   LoggerAttributes,
+  LoggerEvent,
+  LoggerEventExporter,
 } from '../api';
-import { mapExporterEvents } from '../utils';
 import {
   InitParams,
+  LogLevelTitleMap,
   adaptToJSConsole,
   formatSection,
-  LogLevelTitleMap,
 } from './console';
+
+import { mapExporterEvents } from '../utils';
 
 export function adaptToNodeConsole(
   attrs: LoggerAttributes,
@@ -38,7 +39,7 @@ export function formatNodeConsole(evt: LoggerEvent): unknown[] {
   return [
     `\x1b[${statusColor}m${LogLevelTitleMap[evt.level]}\x1b[0m`,
     formatSection(evt),
-    `"${evt.message}"`,
+    `"${evt.message || ''}"`,
     evt,
   ];
 }

@@ -1,4 +1,4 @@
-import { LoggerEvent, LogLevel, Attributes } from '../api';
+import { Attributes, EventType, LogLevel, LoggerEvent } from '../api';
 
 export interface InitParams {
   /**
@@ -11,9 +11,13 @@ export interface InitParams {
 
 export function formatSection(evt: LoggerEvent): string {
   const attrs = evt.attributes || ({} as Attributes);
-  const spanName = attrs.spanName ? '|' + attrs.spanName : '';
-  const spanId = attrs.spanId ? '|' + attrs.spanId : '';
-  return `${attrs.logger || ''}${spanName}${spanId}`;
+  let name = attrs.spanName ? '|' + attrs.spanName : '';
+  if (evt.type === EventType.Tracing) {
+    name = '|' + evt.name;
+  } else if (evt.type === EventType.Event) {
+    name += '|' + evt.name;
+  }
+  return `${attrs.logger || ''}${name}`;
 }
 
 export const LogLevelTitleMap = {
