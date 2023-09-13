@@ -1,5 +1,14 @@
 # acelogger-exporter-sentry
 
+## 0.16.3
+
+### Patch Changes
+
+- add src files for sourcemap
+- Updated dependencies
+  - acelogger-exporter-sentry-core@0.16.3
+  - acelogger@0.16.3
+
 ## 0.16.2
 
 ### Patch Changes

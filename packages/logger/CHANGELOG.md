@@ -1,5 +1,11 @@
 # acelogger
 
+## 0.16.3
+
+### Patch Changes
+
+- add src files for sourcemap
+
 ## 0.16.2
 
 ### Patch Changes
