@@ -17,7 +17,8 @@
   },
   "files": [
     "lib",
-    "es"
+    "es",
+    "src"
   ],
   "author": "wenshin2011@gmail.com",
   "license": "Apache 2.0",

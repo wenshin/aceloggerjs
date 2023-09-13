@@ -17,7 +17,8 @@
   ],
   "files": [
     "lib",
-    "es"
+    "es",
+    "src"
   ],
   "scripts": {
     "prepublish": "npm run test",
