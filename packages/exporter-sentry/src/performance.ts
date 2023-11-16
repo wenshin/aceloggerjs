@@ -94,16 +94,21 @@ export function collectPerformanceRepeat(logger: SpanLogger) {
               (entry as PerformanceNavigationTiming).domainLookupStart,
           },
         });
-        logger.event('SSL', {
-          time:
-            timeOrigin +
-            (entry as PerformanceNavigationTiming).secureConnectionStart,
-          data: {
-            userStartTime:
+        if (
+          (entry as PerformanceNavigationTiming).secureConnectionStart >=
+          (entry as PerformanceNavigationTiming).domainLookupEnd
+        ) {
+          logger.event('SSL', {
+            time:
               timeOrigin +
-              (entry as PerformanceNavigationTiming).domainLookupEnd,
-          },
-        });
+              (entry as PerformanceNavigationTiming).secureConnectionStart,
+            data: {
+              userStartTime:
+                timeOrigin +
+                (entry as PerformanceNavigationTiming).domainLookupEnd,
+            },
+          });
+        }
         logger.event('domContentLoaded', {
           time:
             timeOrigin +

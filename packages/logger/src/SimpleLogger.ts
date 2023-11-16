@@ -1,29 +1,30 @@
-import { stackToFrame } from '.';
 import {
-  Logger,
-  LogLevel,
   EventType,
+  LogLevel,
+  LogParms,
+  Logger,
+  LoggerAttributes,
+  LoggerEvent,
+  LoggerEventParams,
+  Manager,
+  MetricsParams,
+  SpanKind,
   SpanLogger,
   SpanStatusCode,
-  LoggerAttributes,
   SpanStruct,
-  Manager,
-  LogParms,
-  MetricsParams,
-  LoggerEventParams,
-  TraceFlags,
-  SpanKind,
   StartSpanEventOptions,
-  LoggerEvent,
+  TraceFlags,
 } from './api';
-import { ROOT_SPAN_NAME } from './consts';
 import {
   getDurationMetric,
   getLatencyMetric,
-  getSpanEventName,
   getLogLevelByStatus,
   getMillisecondsTime,
+  getSpanEventName,
 } from './utils';
+
+import { ROOT_SPAN_NAME } from './consts';
+import { stackToFrame } from '.';
 
 /**
  * 1. Start event

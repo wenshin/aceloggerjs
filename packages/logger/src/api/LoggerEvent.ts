@@ -1,10 +1,10 @@
 import {
-  SpanStatusCode,
   Attributes,
+  SpanStatusCode,
   TimeInput,
   TraceFlags,
 } from './opentelemetry';
-import { LogLevel, EventType } from './consts';
+import { EventType, LogLevel } from './consts';
 
 /**
  * inspired by sentry data
@@ -35,7 +35,7 @@ export interface LoggerEvent {
     [key: string]: string | number;
   };
   // tags for event, always used to filter the event
-  attributes: Attributes;
+  attributes?: Attributes;
   //  any object data
   data: {
     /**

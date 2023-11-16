@@ -1,12 +1,13 @@
-import { Logger, LoggerEventParams, StartSpanEventOptions } from 'acelogger';
 import {
+  FetchOptions,
   SentryExporter,
   sentryIdCreator,
-  FetchOptions,
   startPageloadLogger as startPageloadLoggerLib,
 } from 'acelogger-exporter-sentry-core';
-import { request } from './http';
+import { Logger, LoggerEventParams, StartSpanEventOptions } from 'acelogger';
+
 import { collectPerformance } from './performance';
+import { request } from './http';
 
 interface SentryConfig {
   key: string;
@@ -14,6 +15,8 @@ interface SentryConfig {
   host: string;
   pageURI?: string;
   userAgent?: string;
+  deviceMemory?: string;
+  hardwareConcurrency?: string;
   fetch?: (options: FetchOptions) => Promise<unknown>;
 }
 
@@ -35,6 +38,8 @@ export function createSentryExporter(conf: SentryConfig) {
     host: conf.host,
     pageURI: conf.pageURI || window.location.href,
     userAgent: window.navigator.userAgent,
+    deviceMemory: conf.deviceMemory || '',
+    hardwareConcurrency: conf.hardwareConcurrency || '',
     fetch: conf.fetch || defaultFetch,
   });
 }

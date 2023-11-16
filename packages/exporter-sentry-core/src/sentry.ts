@@ -20,8 +20,8 @@ import {
  * 3. startTime 比 endTime 大，导致失败
  * 4. measurements 中 mark.metric 只支持 web vitals 指标
  */
-const spanMap = new Map<string, TransactionPayload>();
-const breadcrumbs: TransactionPayload['breadcrumbs'] = [];
+const spanMap = new Map<string, TransactionObject>();
+const breadcrumbs: TransactionObject['breadcrumbs'] = [];
 
 export type EventFormatter<T> = (
   evt: LoggerEvent,
@@ -43,6 +43,8 @@ export interface SentryConfig {
   host: string;
   pageURI: string;
   userAgent: string;
+  deviceMemory?: string;
+  hardwareConcurrency?: string;
   fetch(options: FetchOptions): Promise<unknown>;
 }
 
@@ -95,7 +97,7 @@ export function sendSentryData(evts: ExporterEvents, conf: SentryConfig) {
   });
 }
 
-function sendTransaction(payload: TransactionPayload, conf: SentryConfig) {
+function sendTransaction(payload: TransactionObject, conf: SentryConfig) {
   conf
     .fetch({
       url: getSentryUrl(conf, 'transition'),
@@ -103,20 +105,133 @@ function sendTransaction(payload: TransactionPayload, conf: SentryConfig) {
       headers: {
         'content-type': 'text/plain; charset=utf-8',
       },
-      data: `{"event_id":"${
-        payload.event_id
-      }","sent_at":"${new Date().toISOString()}","sdk":{"name":"${
-        payload.sdk.name
-      }","version":"${payload.sdk.version}"}}
-{"type":"transaction","sample_rates":[{"id":"client_rate","rate":1}]}
-${JSON.stringify(payload)}`,
+      data: getTransactionBody(payload, conf),
     })
     .catch((err) => {
       console.error(err);
     });
 }
 
-interface TransactionSpan {
+function getTransactionBody(payload: TransactionObject, conf: SentryConfig) {
+  return `${JSON.stringify(getTraceInfo(payload, conf))}
+{"type": "transaction"}
+${JSON.stringify(payload)}
+`;
+}
+function getTraceInfo(
+  payload: TransactionObject,
+  conf: SentryConfig
+): TraceInfo {
+  return {
+    event_id: payload.event_id,
+    sent_at: new Date().toISOString(),
+    sdk: {
+      name: payload.sdk.name,
+      version: payload.sdk.version,
+    },
+    trace: {
+      environment: payload.tags.env,
+      public_key: conf.key,
+      trace_id: payload.contexts.trace.trace_id,
+      sample_rate: '1',
+      transaction: payload.transaction,
+      sampled: 'true',
+    },
+  };
+}
+
+interface TraceInfo {
+  event_id: string;
+  sent_at: string;
+  sdk: {
+    name: string;
+    version: string;
+  };
+  trace: {
+    environment: string;
+    public_key: string;
+    trace_id: string;
+    sample_rate: string;
+    transaction: string;
+    sampled: string;
+  };
+}
+
+interface TransactionObject {
+  contexts: Contexts;
+  spans: Span[];
+  start_timestamp: number;
+  tags: Tags;
+  timestamp: number;
+  transaction: string;
+  type: string;
+  transaction_info: {
+    source: string;
+  };
+  measurements: Measurements;
+  platform: string;
+  request: Request;
+  event_id: string;
+  environment: string;
+  sdk: Sdk;
+  breadcrumbs: Breadcrumb[];
+}
+
+interface Breadcrumb {
+  timestamp: number;
+  category: string;
+  event_id?: string;
+  // 21.7 版本 level 是数字类型，23 版本为字符串类型，包括: info,error,warn
+  level?: string;
+  message?: string;
+  data?: BreadcrumbData;
+  type?: string;
+}
+
+interface BreadcrumbData {
+  arguments?: any[];
+  logger?: string;
+  method?: string;
+  url?: string;
+  status_code?: number;
+  response_body_size?: number;
+}
+
+interface Sdk {
+  integrations: string[];
+  name: string;
+  version: string;
+  packages: Package[];
+}
+
+interface Package {
+  name: string;
+  version: string;
+}
+
+interface Request {
+  url: string;
+  headers: Headers;
+}
+
+interface Headers {
+  'User-Agent': string;
+}
+
+interface Measurements {
+  fp?: Fp;
+  fcp?: Fp;
+  'connection.rtt'?: Fp;
+  ttfb?: Fp;
+  'ttfb.requestTime'?: Fp;
+}
+
+interface Fp {
+  value: number;
+  unit: string;
+}
+
+interface Span {
   description: string;
   op: string;
   parent_span_id: string;
@@ -124,78 +239,64 @@ interface TransactionSpan {
   start_timestamp: number;
   timestamp: number;
   trace_id: string;
+  origin: string;
+  data?: Data2;
+  status?: string;
+  tags?: Tags2;
+}
+
+interface Tags2 {
+  'http.status_code': string;
+}
+
+interface Data2 {
+  type?: string;
+  'http.method'?: string;
+  url?: string;
+  'http.response.status_code'?: number;
+  'network.protocol.version'?: string;
+  'network.protocol.name'?: string;
+  'http.request.redirect_start'?: number;
+  'http.request.fetch_start'?: number;
+  'http.request.domain_lookup_start'?: number;
+  'http.request.domain_lookup_end'?: number;
+  'http.request.connect_start'?: number;
+  'http.request.secure_connection_start'?: number;
+  'http.request.connection_end'?: number;
+  'http.request.request_start'?: number;
+  'http.request.response_start'?: number;
+  'http.request.response_end'?: number;
+  'http.response_transfer_size'?: number;
+  'http.response_content_length'?: number;
+  'http.decoded_response_content_length'?: number;
+  'resource.render_blocking_status'?: string;
+}
+
+interface Contexts {
+  trace: Trace;
+}
+
+interface Trace {
+  data: Data;
+  op: string;
+  span_id: string;
+  status: string;
+  tags: Tags;
+  trace_id: string;
+  origin: string;
 }
 
 interface Tags {
+  'routing.instrumentation': string;
   effectiveConnectionType: string;
-  connectionType: string;
   deviceMemory: string;
   hardwareConcurrency: string;
-  [key: string]: string | number;
+  [key: string]: string;
 }
 
-interface Sdk {
-  integrations: string[];
-  name: string;
-  version: string;
-  packages: {
-    name: string;
-    version: string;
-  }[];
-}
-
-interface Breadcrumb {
-  timestamp: number;
-  category: string;
-  data: {
-    arguments: any[];
-    logger: string;
-  };
-  level: string;
-  message: string;
-}
-
-interface TransactionPayload {
-  type: 'transaction';
-  platform: 'javascript';
-  event_id: string;
-  environment: string;
-  sdk: Sdk;
-  request: {
-    url: string;
-    headers: { [key: string]: string };
-  };
-
-  /**
-   * Transaction Data
-   */
-  transaction: string;
-  contexts: {
-    trace: {
-      op: string;
-      span_id: string;
-      tags: Tags;
-      trace_id: string;
-      status?: string;
-    };
-  };
-  /**
-   * 单位秒
-   */
-  start_timestamp: number;
-  /**
-   * 单位秒
-   */
-  timestamp: number;
-  measurements: { [key: string]: { value: number | string } };
-  spans: TransactionSpan[];
-  tags: Tags;
-  breadcrumbs: Breadcrumb[];
-
-  /**
-   * 临时存储子 span，数据不上报
-   */
-  childSpans?: TransactionPayload[];
+interface Data {
+  params: Record<string, string>;
+  query: Record<string, string>;
 }
 
 /**
@@ -237,13 +338,21 @@ function cacheTransactionData(
           sdk: getSentrySDK(),
           request: getSentryRequest(conf),
           transaction: evt.name,
+          transaction_info: {
+            source: 'custom',
+          },
           contexts: {
             trace: {
+              data: {
+                params: {},
+                query: {},
+              },
               op: loggerAttrs.spanName,
               span_id: evt.spanId,
-              trace_id: evt.traceId,
-              tags: getSentryTags({}),
               status: 'unavailable',
+              tags: getSentryTags({}, conf),
+              trace_id: evt.traceId,
+              origin: 'auto.pageload.vue',
             },
           },
           start_timestamp: getSecondsTime(evt.data.userStartTime || evt.time),
@@ -251,11 +360,14 @@ function cacheTransactionData(
           measurements: {},
           spans: [],
           breadcrumbs,
-          tags: getSentryTags({
-            ...globalAttrs,
-            ...loggerAttrs,
-            ...evt.attributes,
-          }),
+          tags: getSentryTags(
+            {
+              ...globalAttrs,
+              ...loggerAttrs,
+              ...evt.attributes,
+            },
+            conf
+          ),
         };
         spanMap.set(evt.spanId, payload);
       }
@@ -263,7 +375,7 @@ function cacheTransactionData(
       updatePayloadMeasurements(payload, evt);
 
       if (evt.type === EventType.Event || evt.type === EventType.Tracing) {
-        const sentrySpan = getSentrySpanFromEvent(payload, evt);
+        const sentrySpan = getSentrySpanFromEvent(payload, loggerAttrs, evt);
         payload.spans.push(sentrySpan);
         const parent = getParentSpanPayload(evt);
         if (parent) {
@@ -325,7 +437,7 @@ function getSentryExceptionData(
     exception: {
       values: [
         {
-          type: `${evt.type}/${evt.level}/${evt.message}`,
+          type: `${evt.type}/${evt.message}`,
           value: evt.message,
           stacktrace: {
             frames,
@@ -359,7 +471,7 @@ function getSentryExceptionData(
         op: loggerAttrs.spanName,
         span_id: evt.spanId,
         trace_id: evt.traceId,
-        tags: getSentryTags({}),
+        tags: getSentryTags({}, conf),
         status: 'unavailable',
       },
     },
@@ -376,7 +488,7 @@ export function createSentryEventId() {
     .reduce((prev) => Math.random().toString(16).substring(2, 10) + prev, '');
 }
 
-function getSentrySDK() {
+function getSentrySDK(): Sdk {
   return {
     integrations: [
       'InboundFilters',
@@ -385,15 +497,18 @@ function getSentrySDK() {
       'Breadcrumbs',
       'GlobalHandlers',
       'LinkedErrors',
-      'UserAgent',
+      'Dedupe',
+      'HttpContext',
       'Vue',
+      'BrowserTracing',
+      'Replay',
     ],
-    name: 'sentry.javascript.react',
-    version: '6.13.3',
+    name: 'sentry.javascript.vue',
+    version: '7.80.0',
     packages: [
       {
         name: 'npm:acelogger',
-        version: '0.13.2',
+        version: '0.16.3',
       },
     ],
   };
@@ -408,34 +523,52 @@ function getSentryRequest(conf: SentryConfig) {
   };
 }
 
-function getSentryTags(attrs: Attributes): Tags {
+function getSentryTags(attrs: Attributes, conf: SentryConfig): Tags {
   return {
     effectiveConnectionType: '',
-    connectionType: '',
-    deviceMemory: '',
-    hardwareConcurrency: '',
+    'routing.instrumentation': '',
+    deviceMemory: conf.deviceMemory || '',
+    hardwareConcurrency: conf.hardwareConcurrency || '',
     ...attrs,
   };
 }
 
 function updatePayloadMeasurements(
-  payload: TransactionPayload,
+  payload: TransactionObject,
   evt: LoggerEvent
 ) {
   if (evt.metrics) {
     Object.keys(evt.metrics).forEach((key) => {
       payload.measurements[key] = { value: evt.metrics[key] };
-      if (['fp', 'fcp', 'lcp'].indexOf(key) > -1) {
+      if (
+        [
+          'fp',
+          'fcp',
+          'lcp',
+          'connection.rtt',
+          'ttfb',
+          'ttfb.requestTime',
+        ].indexOf(key) > -1
+      ) {
         // the value of mark.lcp is not duration, but a timestamp
-        payload.measurements[`mark.${key}`] = {
-          value: getSecondsTime(
+        payload.measurements[key] = {
+          value: getMillisecondsTime(
             (evt.data?.userStartTime as number) || evt.time
           ),
+          unit: 'millisecond',
         };
       }
     });
   }
 }
+
+const LevelMap: { [key: number]: string } = {
+  0: 'debug',
+  1: 'info',
+  2: 'warn',
+  3: 'error',
+  4: 'fatal',
+};
 
 function getBreadcrumb(
   spanName: string,
@@ -450,17 +583,24 @@ function getBreadcrumb(
       arguments: [evt, loggerAttrs, globalAttrs],
       logger: spanName,
     },
-    level: String(evt.level),
+    level: LevelMap[evt.level],
     message: `[${spanName}] ${evt.message}`,
   };
 }
 
-function getSentrySpanFromEvent(payload: TransactionPayload, evt: LoggerEvent) {
-  const endTime = getMillisecondsTime(evt.time);
+function getSentrySpanFromEvent(
+  payload: TransactionObject,
+  loggerAttrs: LoggerAttributes,
+  evt: LoggerEvent
+): Span {
+  let endTime = getMillisecondsTime(evt.time);
   const startTime =
     evt.data && evt.data.userStartTime
       ? (evt.data.userStartTime as number)
       : endTime;
+  if (startTime > endTime) {
+    endTime = startTime;
+  }
   return {
     description: evt.message || 'no message',
     op: evt.name,
@@ -469,6 +609,7 @@ function getSentrySpanFromEvent(payload: TransactionPayload, evt: LoggerEvent) {
     start_timestamp: getSecondsTime(startTime),
     timestamp: getSecondsTime(endTime),
     trace_id: payload.contexts.trace.trace_id,
+    origin: String(loggerAttrs.logger),
   };
 }
 
