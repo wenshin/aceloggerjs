@@ -1,5 +1,11 @@
 # acelogger
 
+## 0.17.0
+
+### Minor Changes
+
+- support sentry 23 and fix http protocol bug
+
 ## 0.16.3
 
 ### Patch Changes
