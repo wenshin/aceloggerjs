@@ -1,5 +1,13 @@
 # acelogger-exporter-sentry
 
+## 0.17.1
+
+### Patch Changes
+
+- fix typescript errors
+- Updated dependencies
+  - acelogger@0.17.1
+
 ## 0.17.0
 
 ### Minor Changes

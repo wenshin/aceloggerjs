@@ -539,7 +539,9 @@ function updatePayloadMeasurements(
 ) {
   if (evt.metrics) {
     Object.keys(evt.metrics).forEach((key) => {
-      payload.measurements[key as keyof Measurements] = { value: Number(evt.metrics?.[key]) };
+      payload.measurements[key as keyof Measurements] = {
+        value: Number(evt.metrics?.[key]),
+      };
       if (
         [
           'fp',

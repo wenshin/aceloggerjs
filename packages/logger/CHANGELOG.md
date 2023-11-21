@@ -1,5 +1,11 @@
 # acelogger
 
+## 0.17.1
+
+### Patch Changes
+
+- fix typescript errors
+
 ## 0.17.0
 
 ### Minor Changes
