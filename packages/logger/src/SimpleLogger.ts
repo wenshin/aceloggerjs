@@ -43,7 +43,7 @@ import { stackToFrame } from '.';
  *   1. level：level || Debug
  */
 export default class SimpleLogger implements Logger {
-  public manager: Manager;
+  public manager!: Manager;
   public span?: SpanStruct;
   private attributes: LoggerAttributes = {
     logger: 'default',
@@ -94,7 +94,7 @@ export default class SimpleLogger implements Logger {
 
   public error(error: Error | string, evt?: LogParms): void {
     let message = '';
-    let stack = '';
+    let stack: string | undefined;
     if (error instanceof Error) {
       message = error.message;
       stack = error.stack;
@@ -114,7 +114,7 @@ export default class SimpleLogger implements Logger {
 
   public fatal(error: Error | string, evt?: LogParms): void {
     let message = '';
-    let stack = '';
+    let stack: string | undefined;
     if (error instanceof Error) {
       message = error.message;
       stack = error.stack;
@@ -215,7 +215,8 @@ export default class SimpleLogger implements Logger {
       e.data
     );
 
-    this.span.endTime = getMillisecondsTime(e.time) || this.manager.timer.now();
+    this.span.endTime =
+      getMillisecondsTime(e.time || 0) || this.manager.timer.now();
     const duration = this.span.endTime - this.span.startTime;
     e.metrics = Object.assign(
       {
@@ -254,7 +255,10 @@ export default class SimpleLogger implements Logger {
     }
 
     const status = evt.status || SpanStatusCode.OK;
-    const level = Math.max(getLogLevelByStatus(status), evt.level);
+    const level = Math.max(
+      getLogLevelByStatus(status),
+      evt.level || LogLevel.Debug
+    );
     const time = evt.time || this.manager.timer.now();
     const samplingRate =
       typeof evt.samplingRate === 'number' ? evt.samplingRate : 1;
@@ -280,7 +284,7 @@ export default class SimpleLogger implements Logger {
 
 function formatMetrics(spanName: string, metrics: LoggerEvent['metrics']) {
   if (metrics) {
-    const newMetrics = {} as LoggerEvent['metrics'];
+    const newMetrics: LoggerEvent['metrics'] = {};
     Object.keys(metrics).map((k) => {
       newMetrics[k.replace(/^\$/, spanName)] = metrics[k];
     });

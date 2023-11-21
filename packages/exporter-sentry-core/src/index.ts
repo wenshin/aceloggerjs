@@ -1,16 +1,16 @@
 import {
   ExporterEvents,
-  LoggerEventExporter,
   Logger,
-  StartSpanEventOptions,
+  LoggerEventExporter,
   LoggerEventParams,
   SpanStatusCode,
+  StartSpanEventOptions,
 } from 'acelogger';
 import {
+  FetchOptions,
+  SentryConfig,
   flushSentry,
   sendSentryData,
-  SentryConfig,
-  FetchOptions,
   sentryIdCreator,
 } from './sentry';
 
@@ -59,7 +59,7 @@ export function startPageloadLogger(
       finish({
         ...params,
         status: SpanStatusCode.ERROR,
-        message: params.message || 'finish pageload span with errors',
+        message: params?.message || 'finish pageload span with errors',
       });
       // 上报所有没有执行 endSpan 的 sentry 数据
       logger.manager.flushSync();

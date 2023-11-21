@@ -37,7 +37,7 @@ export interface LoggerEvent {
   // tags for event, always used to filter the event
   attributes?: Attributes;
   //  any object data
-  data: {
+  data?: {
     /**
      * span start event will carry the userStartTime
      */
@@ -47,7 +47,7 @@ export interface LoggerEvent {
   // error status code
   status: SpanStatusCode;
   // error message for event
-  message: string;
+  message?: string;
   // error stack, only exist when level is EventLevel.Error
   stack?: ErrorStackFrame[];
   // event trigger times

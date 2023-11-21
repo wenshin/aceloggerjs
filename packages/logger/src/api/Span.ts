@@ -1,4 +1,4 @@
-import { SpanContext, SpanKind, Attributes } from './opentelemetry';
+import { Attributes, SpanContext, SpanKind } from './opentelemetry';
 
 export interface SpanStruct {
   name: string;

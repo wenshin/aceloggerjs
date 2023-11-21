@@ -73,17 +73,17 @@ importers:
   packages/exporter-sentry:
     dependencies:
       acelogger-exporter-sentry-core:
-        specifier: workspace:^0.16.2
+        specifier: workspace:^
         version: link:../exporter-sentry-core
     devDependencies:
       acelogger:
-        specifier: workspace:^0.16.2
+        specifier: workspace:^
         version: link:../logger
 
   packages/exporter-sentry-core:
     devDependencies:
       acelogger:
-        specifier: workspace:^0.16.2
+        specifier: workspace:^
         version: link:../logger
 
   packages/logger:

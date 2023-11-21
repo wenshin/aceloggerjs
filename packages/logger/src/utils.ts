@@ -1,13 +1,15 @@
 import {
-  TimeInput,
-  SpanStatusCode,
-  LogLevel,
   ErrorStackFrame,
-  LoggerEvent,
-  LoggerAttributes,
-  ManagerAttributes,
   ExporterEvents,
+  LogLevel,
+  LoggerAttributes,
+  LoggerEvent,
+  ManagerAttributes,
+  SpanStatusCode,
+  TimeInput,
 } from './api';
+
+import { HrTime } from '@opentelemetry/api';
 
 export function isTimeInputHrTime(time: TimeInput): boolean {
   return Array.isArray(time) && time.length === 2;
@@ -15,7 +17,7 @@ export function isTimeInputHrTime(time: TimeInput): boolean {
 
 export function getMillisecondsTime(time: TimeInput): number {
   return time && isTimeInputHrTime(time)
-    ? time[0] * 1e3 + time[1] / 1e6
+    ? (time as HrTime)[0] * 1e3 + (time as HrTime)[1] / 1e6
     : (time as number);
 }
 

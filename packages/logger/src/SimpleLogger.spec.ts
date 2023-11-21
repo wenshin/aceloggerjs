@@ -1,16 +1,17 @@
-import { SimpleManager } from '.';
 import {
-  LogLevel,
-  ExporterEvents,
-  LoggerEventExporter,
   EventType,
-  TraceFlags,
+  ExportResult,
+  ExporterEvents,
+  LogLevel,
+  LoggerEventExporter,
+  Manager,
   SpanKind,
   SpanStatusCode,
-  ExportResult,
-  Manager,
+  TraceFlags,
 } from './api';
+
 import { ROOT_SPAN_NAME } from './consts';
+import { SimpleManager } from '.';
 import { performance } from 'perf_hooks';
 // 本来可以设置 resolveJsonModule 为 true 的，但是这样会导致最终构建的时候，输出目录会包含 src 目录
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -232,7 +233,7 @@ test('SimpleLogger::endSpan without event argument', (done) => {
       expect(endEvt.level).toBe(LogLevel.Info);
       expect(span.startTime).toEqual(span.userStartTime);
       expect(endEvt.metrics).toEqual({
-        'test.span.duration': span.endTime - span.startTime,
+        'test.span.duration': (span.endTime || span.startTime) - span.startTime,
       });
       expect(endEvt.status).toBe(SpanStatusCode.OK);
       expect(endEvt.type).toBe(EventType.Tracing);
@@ -483,7 +484,7 @@ test('SimpleLogger::event without message', (done) => {
     try {
       const { evt } = getEvents(mockExport.mock.calls[0]);
       expect(evt.level).toBe(LogLevel.Info);
-      expect(evt.attributes['my-attr']).toBe('attr');
+      expect(evt.attributes?.['my-attr']).toBe('attr');
       expect(evt.message).toBe(`log event: test-event`);
       done();
     } catch (err) {

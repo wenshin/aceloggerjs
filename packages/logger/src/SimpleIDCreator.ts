@@ -1,6 +1,6 @@
 import { IDCreator } from './api';
 
-const spanCountMap = {
+const spanCountMap: { [key: string]: number } = {
   $rootSpan: 0,
 };
 

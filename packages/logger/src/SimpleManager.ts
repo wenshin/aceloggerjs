@@ -36,7 +36,7 @@ interface CacheEvents {
 export default class SimpleManager implements Manager {
   public eventBuffer = new Map<LogLevel, Map<string, CacheEvents>>();
   // public for test
-  public flushTimer: NodeJS.Timeout;
+  public flushTimer = 0;
 
   private defaultLogger: Logger;
   private defaultTracer: Tracer;
@@ -145,7 +145,7 @@ export default class SimpleManager implements Manager {
 
   public setExporter(level: LogLevel, exportor: LoggerEventExporter): this {
     Object.keys(LogLevel).forEach((l) => {
-      const levelValue = LogLevel[l];
+      const levelValue = LogLevel[l as unknown as number];
       // set LogLevel.Info exporter, will alse set all levels which greater than LogLevel.Info;
       if (typeof levelValue === 'number' && levelValue >= level) {
         const arr = this.exporterMap.get(levelValue) || [];
@@ -187,7 +187,7 @@ export default class SimpleManager implements Manager {
 
     this.flushTimer = setTimeout(() => {
       this.flushSync();
-    }, this.flushDelay);
+    }, this.flushDelay) as unknown as number;
   }
 
   public flushSync() {
@@ -197,7 +197,7 @@ export default class SimpleManager implements Manager {
     });
     // 2. reset eventBuffer anyway
     this.eventBuffer = new Map();
-    this.flushTimer = null;
+    this.flushTimer = 0;
     this.flushCallbacks.forEach((f) => f());
   }
 

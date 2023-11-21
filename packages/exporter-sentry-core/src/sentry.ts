@@ -228,7 +228,7 @@ interface Measurements {
 
 interface Fp {
   value: number;
-  unit: string;
+  unit?: string;
 }
 
 interface Span {
@@ -355,7 +355,7 @@ function cacheTransactionData(
               origin: 'auto.pageload.vue',
             },
           },
-          start_timestamp: getSecondsTime(evt.data.userStartTime || evt.time),
+          start_timestamp: getSecondsTime(evt.data?.userStartTime || evt.time),
           timestamp: getSecondsTime(evt.time),
           measurements: {},
           spans: [],
@@ -539,7 +539,7 @@ function updatePayloadMeasurements(
 ) {
   if (evt.metrics) {
     Object.keys(evt.metrics).forEach((key) => {
-      payload.measurements[key] = { value: evt.metrics[key] };
+      payload.measurements[key as keyof Measurements] = { value: Number(evt.metrics?.[key]) };
       if (
         [
           'fp',
@@ -551,7 +551,7 @@ function updatePayloadMeasurements(
         ].indexOf(key) > -1
       ) {
         // the value of mark.lcp is not duration, but a timestamp
-        payload.measurements[key] = {
+        payload.measurements[key as keyof Measurements] = {
           value: getMillisecondsTime(
             (evt.data?.userStartTime as number) || evt.time
           ),

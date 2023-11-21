@@ -1,8 +1,8 @@
-import { SpanOptions as TSpanOptions } from '@opentelemetry/api/build/src/trace/SpanOptions';
-import { TimeInput } from '@opentelemetry/api/build/src/common/Time';
+import { Manager } from './Manager';
 import { SpanContext } from './opentelemetry';
 import { SpanStruct } from './Span';
-import { Manager } from './Manager';
+import { SpanOptions as TSpanOptions } from '@opentelemetry/api/build/src/trace/SpanOptions';
+import { TimeInput } from '@opentelemetry/api/build/src/common/Time';
 
 export interface TracerStruct {
   startTime: number; // Milliseconds
@@ -10,7 +10,7 @@ export interface TracerStruct {
 }
 
 export type SpanOptions = TSpanOptions & {
-  parent?: SpanContext | null;
+  parent?: SpanContext;
 };
 
 export interface Tracer {

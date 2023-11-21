@@ -25,6 +25,7 @@ export const LogLevelTitleMap = {
   [LogLevel.Info]: 'INFO',
   [LogLevel.Warn]: 'WARN',
   [LogLevel.Error]: 'ERROR',
+  [LogLevel.Fatal]: 'ERROR',
 };
 
 /* tslint:disable: no-console */

@@ -1,14 +1,15 @@
 import {
-  Tracer,
-  TracerStruct,
-  SpanOptions,
+  Manager,
   SpanContext,
+  SpanKind,
+  SpanOptions,
+  SpanStruct,
   TimeInput,
   TraceFlags,
-  SpanKind,
-  Manager,
-  SpanStruct,
+  Tracer,
+  TracerStruct,
 } from './api';
+
 import { getMillisecondsTime } from './utils';
 
 type SpanContextConfig = {
@@ -18,7 +19,7 @@ type SpanContextConfig = {
 } & SpanContext;
 
 export default class SimpleTracer implements Tracer {
-  public manager: Manager;
+  public manager!: Manager;
   private data: TracerStruct = {
     startTime: Date.now(),
   };
@@ -42,7 +43,7 @@ export default class SimpleTracer implements Tracer {
   public createSpan(name: string, options?: SpanOptions): SpanStruct {
     const opt = options || {};
     const now = this.manager.timer.now();
-    const userStartTime = getMillisecondsTime(opt.startTime) || now;
+    const userStartTime = getMillisecondsTime(opt.startTime || 0) || now;
     return {
       attributes: opt.attributes,
       context: this.createSpanContext(opt.parent),
